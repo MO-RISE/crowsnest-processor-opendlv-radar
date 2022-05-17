@@ -1,0 +1,7 @@
+pycluon
+paho-mqtt
+numpy
+environs
+streamz
+pydantic
+datamodel-code-generator
