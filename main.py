@@ -81,26 +81,26 @@ def unpack_spoke(envelope: cEnvelope) -> Tuple[float, np.ndarray, np.ndarray]:
 
         # Unpack message
         azimuth = decode_azimuth(int(radar_message.azimuth))
-        range = radar_message.range
+        radar_range = radar_message.range
         spoke_data = np.frombuffer(radar_message.data, dtype=np.uint8)
 
         LOGGER.debug(
             "Radar message unpacked with azimuth: %.4f, range: %.4f and spoke length: %d",
             azimuth,
-            range,
+            radar_range,
             len(spoke_data),
         )
 
-        distances = decode_distances(len(spoke_data), range)
+        distances = decode_distances(len(spoke_data), radar_range)
 
         # Radial filtering
-        distances[::SWEEP_RADIAL_SUBSETTING]
-        spoke_data[::SWEEP_RADIAL_SUBSETTING]
+        distances = distances[::SWEEP_RADIAL_SUBSETTING]
+        spoke_data = spoke_data[::SWEEP_RADIAL_SUBSETTING]
 
         # Minimum weight filtering
         mask = spoke_data > MIN_READING_WEIGHT
         distances = distances[mask]
-        spoke_data[mask]
+        spoke_data = spoke_data[mask]
 
         return (
             azimuth,
@@ -119,8 +119,8 @@ def polar_to_cartesian(
     """Map from polar to cartesian coordinates"""
     LOGGER.debug("Converting to cartesion for azimuth: %.4f", azimuth)
 
-    x = distances * np.cos(np.deg2rad(azimuth))
-    y = distances * np.sin(np.deg2rad(azimuth))
+    x = distances * np.cos(np.deg2rad(azimuth))  # pylint: disable=invalid-name
+    y = distances * np.sin(np.deg2rad(azimuth))  # pylint: disable=invalid-name
 
     points = np.column_stack((x, y))
 
@@ -128,6 +128,7 @@ def polar_to_cartesian(
 
 
 # Simple "buffering" to output full rotations instead of each individual spoke
+# pylint: disable=invalid-name
 sweep_points = []
 sweep_weights = []
 last_azimuth = -1
@@ -136,8 +137,9 @@ last_azimuth = -1
 def buffer_to_full_360_view(
     azimuth: float, points: np.ndarray, weights: np.ndarray
 ) -> np.ndarray:
+    """Buffer until we have a full sweep, then emit"""
 
-    global sweep_points, sweep_weights, last_azimuth
+    global sweep_points, sweep_weights, last_azimuth  # pylint: disable=global-statement
 
     out = None
 
