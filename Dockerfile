@@ -13,6 +13,5 @@ RUN mkdir brefv && \
 
 
 COPY main.py main.py
-COPY streamz_source_tcp_client.py streamz_source_tcp_client.py 
 
 CMD ["python3", "main.py"]

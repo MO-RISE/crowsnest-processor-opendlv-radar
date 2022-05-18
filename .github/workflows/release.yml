@@ -29,8 +29,8 @@ jobs:
           file: Dockerfile
           push: true
           tags: |
-            ghcr.io/mo-rise/crowsnest-connector-netline:latest
-            ghcr.io/mo-rise/crowsnest-connector-netline:${{ github.event.release.tag_name }}
+            ghcr.io/mo-rise/crowsnest-processor-opendlv-radar:latest
+            ghcr.io/mo-rise/crowsnest-processor-opendlv-radar:${{ github.event.release.tag_name }}
       -
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
