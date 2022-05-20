@@ -13,5 +13,6 @@ RUN mkdir brefv && \
 
 
 COPY main.py main.py
+COPY radar.odvd radar.odvd
 
 CMD ["python3", "main.py"]
