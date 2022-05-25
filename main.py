@@ -17,8 +17,6 @@ from brefv.envelope import Envelope
 # Reading config from environment variables
 env = Env()
 
-CLUON_CID = env.int("CLUON_CID", 111)
-
 MQTT_BROKER_HOST = env("MQTT_BROKER_HOST")
 MQTT_BROKER_PORT = env.int("MQTT_BROKER_PORT", 1883)
 MQTT_CLIENT_ID = env("MQTT_CLIENT_ID", None)
@@ -27,10 +25,15 @@ MQTT_TLS = env.bool("MQTT_TLS", False)
 MQTT_USER = env("MQTT_USER", None)
 MQTT_PASSWORD = env("MQTT_PASSWORD", None)
 MQTT_BASE_TOPIC = env("MQTT_BASE_TOPIC")
-MIN_READING_WEIGHT = env.int("MIN_READING_WEIGHT", 0)
-SWEEP_ANGULAR_SUBSETTING = env.int("SWEEP_ANGULAR_SUBSETTING", 10)
-SWEEP_RADIAL_SUBSETTING = env.int("SWEEP_RADIAL_SUBSETTING", 2)
-MAX_SWEEP_FREQUENCY = env.float("MAX_SWEEP_FREQUENCY", 1)
+
+CLUON_CID = env.int("CLUON_CID", 111)
+
+RADAR_ATTITUDE: list = env.list(
+    "RADAR_ATTITUDE", [0, 0, 0], subcast=float, validate=lambda x: len(x) == 3
+)
+RADAR_MIN_READING_WEIGHT = env.int("RADAR_MIN_READING_WEIGHT", 0)
+RADAR_SWEEP_ANGULAR_SUBSETTING = env.int("RADAR_SWEEP_ANGULAR_SUBSETTING", 10)
+RADAR_SWEEP_RADIAL_SUBSETTING = env.int("RADAR_SWEEP_RADIAL_SUBSETTING", 2)
 
 LOG_LEVEL = env.log_level("LOG_LEVEL", logging.WARNING)
 
@@ -94,11 +97,11 @@ def unpack_spoke(envelope: cEnvelope) -> Tuple[float, np.ndarray, np.ndarray]:
         distances = decode_distances(len(spoke_data), radar_range)
 
         # Radial filtering
-        distances = distances[::SWEEP_RADIAL_SUBSETTING]
-        spoke_data = spoke_data[::SWEEP_RADIAL_SUBSETTING]
+        distances = distances[::RADAR_SWEEP_RADIAL_SUBSETTING]
+        spoke_data = spoke_data[::RADAR_SWEEP_RADIAL_SUBSETTING]
 
         # Minimum weight filtering
-        mask = spoke_data > MIN_READING_WEIGHT
+        mask = spoke_data > RADAR_MIN_READING_WEIGHT
         distances = distances[mask]
         spoke_data = spoke_data[mask]
 
@@ -117,7 +120,7 @@ def polar_to_cartesian(
     azimuth: float, distances: np.ndarray, weights: np.ndarray
 ) -> Tuple[float, np.ndarray]:
     """Map from polar to cartesian coordinates"""
-    LOGGER.debug("Converting to cartesion for azimuth: %.4f", azimuth)
+    LOGGER.debug("Converting to cartesian for azimuth: %.4f", azimuth)
 
     x = distances * np.cos(np.deg2rad(azimuth))  # pylint: disable=invalid-name
     y = distances * np.sin(np.deg2rad(azimuth))  # pylint: disable=invalid-name
@@ -147,8 +150,8 @@ def buffer_to_full_360_view(
         # We just started a new rotation, emit the previous one
 
         # Angular filtering
-        sweep_points = sweep_points[::SWEEP_ANGULAR_SUBSETTING]
-        sweep_weights = sweep_weights[::SWEEP_ANGULAR_SUBSETTING]
+        sweep_points = sweep_points[::RADAR_SWEEP_ANGULAR_SUBSETTING]
+        sweep_weights = sweep_weights[::RADAR_SWEEP_ANGULAR_SUBSETTING]
 
         # Update out
         out = (
@@ -212,10 +215,10 @@ if __name__ == "__main__":
     pipe = (
         source.map(unpack_spoke)
         .filter(not_empty)
+        .latest()  # Drop anything we dont manage to process...
         .starmap(polar_to_cartesian)
         .starmap(buffer_to_full_360_view)
         .filter(not_empty)
-        .rate_limit(1 / MAX_SWEEP_FREQUENCY)
         .starmap(to_brefv)
         .sink(to_mqtt)
     )
