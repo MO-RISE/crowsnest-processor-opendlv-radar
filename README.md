@@ -1,7 +1,17 @@
 # crowsnest-processor-opendlv-radar
 
-A processing microservice within the crowsnest ecosystem which listens on `RadarDetectionReading`s from an OpenDLV session and converts and outputs these as "single level point clouds" with weights.
+A processing microservice within the crowsnest ecosystem which listens on `RadarDetectionReading`s from an OpenDLV session and converts and outputs these as "single level point clouds" with weights. 
 
+Output minimized example:  
+```
+{
+    "sent_at": "2023-02-14T13:37:38.326046+00:00", 
+    "message": 
+    {
+        "points": [[0.0, 0.0], [2.9296840530811576, 0.0044940825770061485], [5.859368106162315, 0.008988165154012297], ...] 
+    }
+}
+```
 
 ## Development setup
 To setup the development environment:
@@ -27,6 +37,7 @@ To run the linters:
 To run the tests:
 
     python -m pytest --verbose tests
+
 
 ## License
 Apache 2.0, see [LICENSE](./LICENSE)
