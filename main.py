@@ -125,7 +125,11 @@ def polar_to_cartesian(
     x = distances * np.cos(np.deg2rad(azimuth))  # pylint: disable=invalid-name
     y = distances * np.sin(np.deg2rad(azimuth))  # pylint: disable=invalid-name
 
-    points = np.column_stack((x, y))
+    # Distance correction (Do not know why...)
+    x = x*2
+    y = y*2
+
+    points = np.column_stack((y, x))
 
     return azimuth, points, weights
 
