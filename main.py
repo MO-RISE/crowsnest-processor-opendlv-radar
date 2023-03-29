@@ -34,7 +34,7 @@ RADAR_MIN_READING_WEIGHT = env.int("RADAR_MIN_READING_WEIGHT", 0)
 RADAR_SWEEP_ANGULAR_SUBSETTING = env.int("RADAR_SWEEP_ANGULAR_SUBSETTING", 10)
 RADAR_SWEEP_RADIAL_SUBSETTING = env.int("RADAR_SWEEP_RADIAL_SUBSETTING", 2)
 
-LOG_LEVEL = env.log_level("LOG_LEVEL", logging.WARNING)
+LOG_LEVEL = env.log_level("LOG_LEVEL", logging.DEBUG)
 
 ## Import and generate code for message specifications
 radar_message_spec = import_odvd("radar.odvd")
