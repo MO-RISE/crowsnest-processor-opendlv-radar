@@ -84,7 +84,7 @@ def unpack_spoke(envelope: cEnvelope) -> Tuple[float, np.ndarray, np.ndarray]:
         str_id = str(envelope.sender_stamp)
         # str_time = str(envelope.sender_timestamp)
 
-        LOGGER.info("Sender ID: %s, time: %s", str_id, str_time)
+        LOGGER.info("Sender ID: %s", str_id)
         
         
 
