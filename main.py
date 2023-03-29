@@ -81,7 +81,7 @@ def unpack_spoke(envelope: cEnvelope) -> Tuple[float, np.ndarray, np.ndarray]:
         radar_message = radar_message_spec.opendlv_proxy_RadarDetectionReading()
         radar_message.ParseFromString(envelope.serialized_data)
 
-        LOGGER.info("Sender ID: %s", radar_message.senderStamp)
+        LOGGER.info("Sender ID: %s", envelope.senderStamp)
         
         
 
