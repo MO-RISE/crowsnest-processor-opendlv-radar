@@ -82,7 +82,7 @@ def unpack_spoke(envelope: cEnvelope) -> Tuple[float, np.ndarray, np.ndarray]:
         radar_message.ParseFromString(envelope.serialized_data)
 
         str_id = str(envelope.sender_stamp)
-        str_time = str(envelope.sender_timestamp)
+        # str_time = str(envelope.sender_timestamp)
 
         LOGGER.info("Sender ID: %s, time: %s", str_id, str_time)
         
