@@ -27,7 +27,7 @@ MQTT_PASSWORD = env("MQTT_PASSWORD", None)
 MQTT_BASE_TOPIC = env("MQTT_BASE_TOPIC")
 
 CLUON_CID = env.int("CLUON_CID", 111)
-CLUON_MSG_ID = env.int("CLUON_MS_ID", 1201)
+CLUON_ENVELOPE_ID = env.int("CLUON_MS_ID", 1201)
 
 RADAR_ATTITUDE: list = env.list("RADAR_ATTITUDE", [0, 0, 0], subcast=float, validate=lambda x: len(x) == 3)
 RADAR_MIN_READING_WEIGHT = env.int("RADAR_MIN_READING_WEIGHT", 0)
@@ -84,7 +84,7 @@ def unpack_spoke(envelope: cEnvelope) -> Tuple[float, np.ndarray, np.ndarray]:
         str_id = envelope.sender_stamp
         # str_time = str(envelope.sender_timestamp)
         
-        if CLUON_MSG_ID == str_id:
+        if CLUON_ENVELOPE_ID == str_id:
             LOGGER.info("Sender ID: %s", str_id)
             
 
@@ -239,6 +239,6 @@ if __name__ == "__main__":
 
     # Register triggers
     session = OD4Session(CLUON_CID)
-    session.add_data_trigger(1201, source.emit)
+    session.add_data_trigger(CLUON_ENVELOPE_ID, source.emit)
 
     mq.loop_forever()
