@@ -81,41 +81,43 @@ def unpack_spoke(envelope: cEnvelope) -> Tuple[float, np.ndarray, np.ndarray]:
         radar_message = radar_message_spec.opendlv_proxy_RadarDetectionReading()
         radar_message.ParseFromString(envelope.serialized_data)
 
-        str_id = str(envelope.sender_stamp)
+        str_id = envelope.sender_stamp
         # str_time = str(envelope.sender_timestamp)
-
-        LOGGER.info("Sender ID: %s", str_id)
         
-        
+        if CLUON_MSG_ID == str_id:
+            LOGGER.info("Sender ID: %s", str_id)
+            
 
-        # Unpack message
-        azimuth = decode_azimuth(int(radar_message.azimuth))
-        radar_range = radar_message.range
-        spoke_data = np.frombuffer(radar_message.data, dtype=np.uint8)
+            # Unpack message
+            azimuth = decode_azimuth(int(radar_message.azimuth))
+            radar_range = radar_message.range
+            spoke_data = np.frombuffer(radar_message.data, dtype=np.uint8)
 
-        LOGGER.debug(
-            "Radar message unpacked with azimuth: %.4f, range: %.4f and spoke length: %d",
-            azimuth,
-            radar_range,
-            len(spoke_data),
-        )
+            LOGGER.debug(
+                "Radar message unpacked with azimuth: %.4f, range: %.4f and spoke length: %d",
+                azimuth,
+                radar_range,
+                len(spoke_data),
+            )
 
-        distances = decode_distances(len(spoke_data), radar_range)
+            distances = decode_distances(len(spoke_data), radar_range)
 
-        # Radial filtering
-        distances = distances[::RADAR_SWEEP_RADIAL_SUBSETTING]
-        spoke_data = spoke_data[::RADAR_SWEEP_RADIAL_SUBSETTING]
+            # Radial filtering
+            distances = distances[::RADAR_SWEEP_RADIAL_SUBSETTING]
+            spoke_data = spoke_data[::RADAR_SWEEP_RADIAL_SUBSETTING]
 
-        # Minimum weight filtering
-        mask = spoke_data > RADAR_MIN_READING_WEIGHT
-        distances = distances[mask]
-        spoke_data = spoke_data[mask]
+            # Minimum weight filtering
+            mask = spoke_data > RADAR_MIN_READING_WEIGHT
+            distances = distances[mask]
+            spoke_data = spoke_data[mask]
 
-        return (
-            azimuth,
-            distances,
-            spoke_data,
-        )
+            return (
+                azimuth,
+                distances,
+                spoke_data,
+            )
+        else:
+            LOGGER.info("Not handled sender ID: %s", str_id)  
 
     except Exception:  # pylint: disable=broad-except
         LOGGER.exception("Exception when unpacking a radar message")
@@ -237,6 +239,6 @@ if __name__ == "__main__":
 
     # Register triggers
     session = OD4Session(CLUON_CID)
-    session.add_data_trigger(CLUON_MSG_ID, source.emit)
+    session.add_data_trigger(1201, source.emit)
 
     mq.loop_forever()
