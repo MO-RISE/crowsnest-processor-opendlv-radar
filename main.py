@@ -27,7 +27,7 @@ MQTT_PASSWORD = env("MQTT_PASSWORD", None)
 MQTT_BASE_TOPIC = env("MQTT_BASE_TOPIC")
 
 CLUON_CID = env.int("CLUON_CID", 111)
-CLUON_ENVELOPE_ID = env.int("CLUON_MS_ID", 1201)
+CLUON_ENVELOPE_ID = env.int("CLUON_ENVELOPE_ID", 1201)
 
 RADAR_ATTITUDE: list = env.list("RADAR_ATTITUDE", [0, 0, 0], subcast=float, validate=lambda x: len(x) == 3)
 RADAR_MIN_READING_WEIGHT = env.int("RADAR_MIN_READING_WEIGHT", 0)
@@ -239,6 +239,6 @@ if __name__ == "__main__":
 
     # Register triggers
     session = OD4Session(CLUON_CID)
-    session.add_data_trigger(CLUON_ENVELOPE_ID, source.emit)
+    session.add_data_trigger(1201, source.emit)
 
     mq.loop_forever()
