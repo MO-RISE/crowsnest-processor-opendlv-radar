@@ -27,10 +27,9 @@ MQTT_PASSWORD = env("MQTT_PASSWORD", None)
 MQTT_BASE_TOPIC = env("MQTT_BASE_TOPIC")
 
 CLUON_CID = env.int("CLUON_CID", 111)
+CLUON_MSG_ID = env.int("CLUON_MS_ID", 1201)
 
-RADAR_ATTITUDE: list = env.list(
-    "RADAR_ATTITUDE", [0, 0, 0], subcast=float, validate=lambda x: len(x) == 3
-)
+RADAR_ATTITUDE: list = env.list("RADAR_ATTITUDE", [0, 0, 0], subcast=float, validate=lambda x: len(x) == 3)
 RADAR_MIN_READING_WEIGHT = env.int("RADAR_MIN_READING_WEIGHT", 0)
 RADAR_SWEEP_ANGULAR_SUBSETTING = env.int("RADAR_SWEEP_ANGULAR_SUBSETTING", 10)
 RADAR_SWEEP_RADIAL_SUBSETTING = env.int("RADAR_SWEEP_RADIAL_SUBSETTING", 2)
@@ -116,9 +115,7 @@ def unpack_spoke(envelope: cEnvelope) -> Tuple[float, np.ndarray, np.ndarray]:
         return None
 
 
-def polar_to_cartesian(
-    azimuth: float, distances: np.ndarray, weights: np.ndarray
-) -> Tuple[float, np.ndarray]:
+def polar_to_cartesian(azimuth: float, distances: np.ndarray, weights: np.ndarray) -> Tuple[float, np.ndarray]:
     """Map from polar to cartesian coordinates"""
     LOGGER.debug("Converting to cartesian for azimuth: %.4f", azimuth)
 
@@ -126,8 +123,8 @@ def polar_to_cartesian(
     y = distances * np.sin(np.deg2rad(azimuth))  # pylint: disable=invalid-name
 
     # Distance correction (Do not know why...)
-    x = x*1.852
-    y = y*1.852
+    x = x * 1.852
+    y = y * 1.852
 
     points = np.column_stack((y, x))
 
@@ -141,9 +138,7 @@ sweep_weights = []
 last_azimuth = -1
 
 
-def buffer_to_full_360_view(
-    azimuth: float, points: np.ndarray, weights: np.ndarray
-) -> np.ndarray:
+def buffer_to_full_360_view(azimuth: float, points: np.ndarray, weights: np.ndarray) -> np.ndarray:
     """Buffer until we have a full sweep, then emit"""
 
     global sweep_points, sweep_weights, last_azimuth  # pylint: disable=global-statement
@@ -235,6 +230,6 @@ if __name__ == "__main__":
 
     # Register triggers
     session = OD4Session(CLUON_CID)
-    session.add_data_trigger(1201, source.emit)
+    session.add_data_trigger(CLUON_MSG_ID, source.emit)
 
     mq.loop_forever()
