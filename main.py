@@ -132,8 +132,8 @@ def polar_to_cartesian(azimuth: float, distances: np.ndarray, weights: np.ndarra
     y = distances * np.sin(np.deg2rad(azimuth))  # pylint: disable=invalid-name
 
     # Distance correction (Do not know why...)
-    x = x * 1.852
-    y = y * 1.852
+    # x = x * 1.852
+    # y = y * 1.852
 
     points = np.column_stack((y, x))
 
