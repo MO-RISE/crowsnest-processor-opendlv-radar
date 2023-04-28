@@ -225,9 +225,10 @@ if __name__ == "__main__":
         source.map(unpack_spoke)
         .filter(not_empty)
         .latest()  # Drop anything we dont manage to process...
-        .rate_limit(1 / RADAR_MAX_UPDATE_FREQUENCY)
         .starmap(polar_to_cartesian)
         .starmap(buffer_to_full_360_view)
+        .latest()  # Drop anything we dont manage to process...
+        .rate_limit(1 / RADAR_MAX_UPDATE_FREQUENCY)
         .filter(not_empty)
         .starmap(to_brefv)
         .sink(to_mqtt)
