@@ -33,6 +33,7 @@ RADAR_ATTITUDE: list = env.list("RADAR_ATTITUDE", [0, 0, 0], subcast=float, vali
 RADAR_MIN_READING_WEIGHT = env.int("RADAR_MIN_READING_WEIGHT", 0)
 RADAR_SWEEP_ANGULAR_SUBSETTING = env.int("RADAR_SWEEP_ANGULAR_SUBSETTING", 10)
 RADAR_SWEEP_RADIAL_SUBSETTING = env.int("RADAR_SWEEP_RADIAL_SUBSETTING", 2)
+RADAR_MAX_UPDATE_FREQUENCY = env.int("RADAR_MAX_UPDATE_FREQUENCY", 1)
 
 LOG_LEVEL = env.log_level("LOG_LEVEL", logging.DEBUG)
 
@@ -224,6 +225,7 @@ if __name__ == "__main__":
         source.map(unpack_spoke)
         .filter(not_empty)
         .latest()  # Drop anything we dont manage to process...
+        .rate_limit(1 / RADAR_MAX_UPDATE_FREQUENCY)
         .starmap(polar_to_cartesian)
         .starmap(buffer_to_full_360_view)
         .filter(not_empty)
