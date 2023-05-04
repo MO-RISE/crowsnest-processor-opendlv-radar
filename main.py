@@ -17,25 +17,25 @@ from brefv.envelope import Envelope
 # Reading config from environment variables
 env = Env()
 
-MQTT_BROKER_HOST = env("MQTT_BROKER_HOST")
+MQTT_BROKER_HOST = env("MQTT_BROKER_HOST", "localhost")
 MQTT_BROKER_PORT = env.int("MQTT_BROKER_PORT", 1883)
 MQTT_CLIENT_ID = env("MQTT_CLIENT_ID", None)
 MQTT_TRANSPORT = env("MQTT_TRANSPORT", "tcp")
 MQTT_TLS = env.bool("MQTT_TLS", False)
 MQTT_USER = env("MQTT_USER", None)
 MQTT_PASSWORD = env("MQTT_PASSWORD", None)
-MQTT_BASE_TOPIC = env("MQTT_BASE_TOPIC")
+MQTT_BASE_TOPIC = env("MQTT_BASE_TOPIC", "CROWSNEST/SEAHORSE/RADAR/0/SWEEP")
 
-CLUON_CID = env.int("CLUON_CID", 111)
+CLUON_CID = env.int("CLUON_CID", 65)
 CLUON_ENVELOPE_ID = env.int("CLUON_ENVELOPE_ID", 1201)
 
 RADAR_ATTITUDE: list = env.list("RADAR_ATTITUDE", [0, 0, 0], subcast=float, validate=lambda x: len(x) == 3)
 RADAR_MIN_READING_WEIGHT = env.int("RADAR_MIN_READING_WEIGHT", 0)
-RADAR_SWEEP_ANGULAR_SUBSETTING = env.int("RADAR_SWEEP_ANGULAR_SUBSETTING", 10)
+RADAR_SWEEP_ANGULAR_SUBSETTING = env.int("RADAR_SWEEP_ANGULAR_SUBSETTING", 1)
 RADAR_SWEEP_RADIAL_SUBSETTING = env.int("RADAR_SWEEP_RADIAL_SUBSETTING", 2)
-RADAR_MAX_UPDATE_FREQUENCY = env.int("RADAR_MAX_UPDATE_FREQUENCY", 1)
+RADAR_INPUT_SLICE = env.int("RADAR_INPUT_SLICE", 2) 
 
-LOG_LEVEL = env.log_level("LOG_LEVEL", logging.DEBUG)
+LOG_LEVEL = env.log_level("LOG_LEVEL", logging.WARNING)
 
 ## Import and generate code for message specifications
 radar_message_spec = import_odvd("radar.odvd")
@@ -83,15 +83,14 @@ def unpack_spoke(envelope: cEnvelope) -> Tuple[float, np.ndarray, np.ndarray]:
         radar_message.ParseFromString(envelope.serialized_data)
 
         str_id = envelope.sender_stamp
-        # str_time = str(envelope.sender_timestamp)
-        
+
         if CLUON_ENVELOPE_ID == str_id:
             LOGGER.info("Sender ID: %s", str_id)
-            
 
             # Unpack message
             azimuth = decode_azimuth(int(radar_message.azimuth))
             radar_range = radar_message.range
+
             spoke_data = np.frombuffer(radar_message.data, dtype=np.uint8)
 
             LOGGER.debug(
@@ -118,11 +117,12 @@ def unpack_spoke(envelope: cEnvelope) -> Tuple[float, np.ndarray, np.ndarray]:
                 spoke_data,
             )
         else:
-            LOGGER.info("Not handled sender ID: %s", str_id)  
+            LOGGER.info("Not handled sender ID: %s", str_id)
 
     except Exception:  # pylint: disable=broad-except
         LOGGER.exception("Exception when unpacking a radar message")
-        return None
+
+    return None
 
 
 def polar_to_cartesian(azimuth: float, distances: np.ndarray, weights: np.ndarray) -> Tuple[float, np.ndarray]:
@@ -131,10 +131,6 @@ def polar_to_cartesian(azimuth: float, distances: np.ndarray, weights: np.ndarra
 
     x = distances * np.cos(np.deg2rad(azimuth))  # pylint: disable=invalid-name
     y = distances * np.sin(np.deg2rad(azimuth))  # pylint: disable=invalid-name
-
-    # Distance correction (Do not know why...)
-    # x = x * 1.852
-    # y = y * 1.852
 
     points = np.column_stack((y, x))
 
@@ -217,18 +213,16 @@ def to_mqtt(envelope: Envelope):
 
 
 if __name__ == "__main__":
-
     # Setup pipeline
     source = Stream()
 
     pipe = (
-        source.map(unpack_spoke)
+        source
+        .slice(step=RADAR_INPUT_SLICE)  # Drop if processing power is not enugh...
+        .map(unpack_spoke)
         .filter(not_empty)
-        .latest()  # Drop anything we dont manage to process...
         .starmap(polar_to_cartesian)
         .starmap(buffer_to_full_360_view)
-        .latest()  # Drop anything we dont manage to process...
-        .rate_limit(1 / RADAR_MAX_UPDATE_FREQUENCY)
         .filter(not_empty)
         .starmap(to_brefv)
         .sink(to_mqtt)
@@ -243,5 +237,6 @@ if __name__ == "__main__":
     # Register triggers
     session = OD4Session(CLUON_CID)
     session.add_data_trigger(1201, source.emit)
+
 
     mq.loop_forever()
