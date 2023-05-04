@@ -16,7 +16,7 @@ services:
       - CLUON_CID=65
       # Radar outputs two images diffrensiated by ID (Deafult: 1201 & 1202)
       - CLUON_ENVELOPE_ID=1201
-      
+ 
       # Filtering clouon input messages (1=every spoke, 2=50% of spokes...)
       - RADAR_INPUT_SLICE=1
       # Radar return filter by signal return strength 
