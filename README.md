@@ -13,6 +13,32 @@ Output minimized example:
 }
 ```
 
+## Docker compose example
+
+```yml
+  crowsnest-processor-radar-0:
+    image: ghcr.io/mo-rise/crowsnest-processor-opendlv-radar:0.1.17
+    container_name: cw-radar-processor-0
+    restart: unless-stopped
+    network_mode: "host"
+    deploy:
+      resources:
+        limits:
+          memory: 1024M
+    environment:
+      - CLUON_CID=65
+      - CLUON_ENVELOPE_ID=1201
+      - MQTT_BROKER_HOST=localhost
+      - MQTT_BROKER_PORT=1883
+      - MQTT_BASE_TOPIC=CROWSNEST/SEAHORSE/RADAR/0/SWEEP
+      - RADAR_MIN_READING_WEIGHT=0
+      - RADAR_SWEEP_ANGULAR_SUBSETTING=4
+      - RADAR_SWEEP_RADIAL_SUBSETTING=4
+      - RADAR_MAX_UPDATE_FREQUENCY=1
+```
+
+
+
 ## Development setup
 To setup the development environment:
 
