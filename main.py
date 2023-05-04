@@ -17,16 +17,16 @@ from brefv.envelope import Envelope
 # Reading config from environment variables
 env = Env()
 
-MQTT_BROKER_HOST = env("MQTT_BROKER_HOST")
+MQTT_BROKER_HOST = env("MQTT_BROKER_HOST", "localhost")
 MQTT_BROKER_PORT = env.int("MQTT_BROKER_PORT", 1883)
 MQTT_CLIENT_ID = env("MQTT_CLIENT_ID", None)
 MQTT_TRANSPORT = env("MQTT_TRANSPORT", "tcp")
 MQTT_TLS = env.bool("MQTT_TLS", False)
 MQTT_USER = env("MQTT_USER", None)
 MQTT_PASSWORD = env("MQTT_PASSWORD", None)
-MQTT_BASE_TOPIC = env("MQTT_BASE_TOPIC")
+MQTT_BASE_TOPIC = env("MQTT_BASE_TOPIC", "mqtt")
 
-CLUON_CID = env.int("CLUON_CID", 111)
+CLUON_CID = env.int("CLUON_CID", 65)
 CLUON_ENVELOPE_ID = env.int("CLUON_ENVELOPE_ID", 1201)
 
 RADAR_ATTITUDE: list = env.list("RADAR_ATTITUDE", [0, 0, 0], subcast=float, validate=lambda x: len(x) == 3)
